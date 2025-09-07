@@ -1,12 +1,12 @@
 // test/HelloWorld.test.js
 import { expect } from "chai";
-import hre from "hardhat";
-
-const { ethers } = hre;
+import { network } from "hardhat";
 
 describe("HelloWorld", function () {
   it("returns and updates greeting", async function () {
-    const HelloWorld = await ethers.getContractFactory("HelloWorld");
+    const { ethers } = await network.connect();
+
+    const HelloWorld = await ethers.getContractFactory("contracts/HelloWorld.sol:HelloWorld");
     const hello = await HelloWorld.deploy("Hi");
     await hello.waitForDeployment();
 
@@ -18,3 +18,4 @@ describe("HelloWorld", function () {
     expect(await hello.greet()).to.equal("Hola");
   });
 });
+
