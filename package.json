@@ -1,10 +1,14 @@
 {
   "name": "solidity-hello",
   "version": "1.0.0",
-  "description": "",
+  "description": "solidity template",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "node": "hardhat node",
+    "console": "hardhat console --network localhost",
+    "clean": "hardhat clean"
   },
   "keywords": [],
   "author": "",
@@ -15,3 +19,4 @@
     "hardhat": "^3.0.4"
   }
 }
+
