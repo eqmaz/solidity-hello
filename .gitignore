@@ -1,2 +1,18 @@
+# IDE
+.idea/
+.vscode/
+.DS_Store
+
+# Node
 /node_modules/
-/.idea/
+package-lock.json
+
+# Hardhat build outputs
+artifacts/
+cache/
+
+# Env files
+.env
+.env.local
+.env.*.local
+
