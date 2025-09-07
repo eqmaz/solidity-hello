@@ -11,6 +11,9 @@ package-lock.json
 artifacts/
 cache/
 
+# Foundry build outputs
+out/
+
 # Env files
 .env
 .env.local

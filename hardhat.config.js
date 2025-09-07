@@ -1,6 +1,6 @@
-import hardhatToolboxMochaEthers from "@nomicfoundation/hardhat-toolbox-mocha-ethers";
+import "@nomicfoundation/hardhat-ethers";
+import "@nomicfoundation/hardhat-chai-matchers";
 
 export default {
-    plugins: [hardhatToolboxMochaEthers],
-    solidity: "0.8.24",
+  solidity: "0.8.24",
 };
