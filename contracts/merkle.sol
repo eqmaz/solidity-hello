@@ -36,7 +36,7 @@ contract Merkle {
     /// @param amount The amount of tokens the claimant is claiming.
     /// @param proof An array of hashes representing the Merkle proof.
     /// @return isValid True if the computed hash from the proof matches the stored Merkle root.
-    function verifyClaim(address arr, uint256 amount, bytes32[] calldata proof) internal returns (bool) {
+    function verifyClaim(address arr, uint256 amount, bytes32[] calldata proof) internal view returns (bool) {
         // We're creating a hash of the address and the amount using the inbuilt keccak256 function
         bytes32 leaf = keccak256(abi.encodePacked(arr, amount));
 
