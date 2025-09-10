@@ -2,27 +2,40 @@
 pragma solidity ^0.8.24;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+/// @title Merkle Airdrop Contract
+/// @notice Allows eligible users to claim ERC20 token airdrops using Merkle proofs.
+/// @dev The contract uses a Merkle root to verify eligibility. Each address can claim only once.
 contract Merkle {
 
-    // This stores the root of the merkle tree (hash)
-    bytes32 public root; // 0x000
+    /// @notice The Merkle root of the airdrop eligibility tree.
+    bytes32 public root; // 0x000 by default (see constructor)
+
+    /// @notice The address of the ERC20 token to be distributed via the airdrop.
     address public tokenToAirdrop;
 
     // This would store who has already claimed.
     mapping(address => bool) public hasClaimed;
 
-    // Someone else could reuse this contract, so someone else could use their own merkle root as the root
-    // Gives you the option to set the root when you deploy the contract
+    /// @notice Initializes the contract with a Merkle root and token address.
+    /// @param _root The Merkle root representing eligible claims.
+    /// @param _token The address of the ERC20 token to airdrop.
     constructor(bytes32 _root, address _token) {
         tokenToAirdrop = _token;
         root = _root;
     }
 
+    /// @notice Emitted when a user successfully claims their airdrop.
+    /// @param claimerAddress The address of the user who claimed the airdrop.
+    /// @param amount The amount of tokens claimed.
     event AirdropClaimed(address indexed claimerAddress, uint256 amount);
 
-    /**
-     *
-     */
+
+    /// @notice Verifies whether a claim is valid based on a Merkle proof.
+    /// @dev This function computes the Merkle proof hash from the leaf node up to the root.
+    /// @param arr The address of the claimant.
+    /// @param amount The amount of tokens the claimant is claiming.
+    /// @param proof An array of hashes representing the Merkle proof.
+    /// @return isValid True if the computed hash from the proof matches the stored Merkle root.
     function verifyClaim(address arr, uint256 amount, bytes32[] calldata proof) internal returns (bool) {
         // We're creating a hash of the address and the amount using the inbuilt keccak256 function
         bytes32 leaf = keccak256(abi.encodePacked(arr, amount));
@@ -45,9 +58,12 @@ contract Merkle {
         return computedHash == root;
     }
 
-    /**
-     *
-     */
+    /// @notice Allows a user to claim their airdropped tokens using a valid Merkle proof.
+    /// @dev The function verifies proof validity, ensures the user hasn’t already claimed, and transfers tokens.
+    /// Emits an {AirdropClaimed} event upon successful claim.
+    /// @param arr The address of the claimant (should match msg.sender in most valid use cases).
+    /// @param amount The amount of tokens to claim.
+    /// @param proof A Merkle proof validating the claim.
     function claimAirdrop(address arr, uint256 amount, bytes32[] calldata proof) public {
         // we check that the message sender doesn't exist in our list of already claimed addresses
         require(!hasClaimed[msg.sender], "Already claimed");
