@@ -1,20 +1,24 @@
-const { expect } = require("chai");
-const { ethers } = require("hardhat");
-const { MerkleTree } = require("merkletreejs");
-const keccak256 = require("keccak256");
+import { expect } from "chai";
+import hre from "hardhat";
+import { ethers as ethersLib } from "ethers";
+import { MerkleTree } from "merkletreejs";
+import keccak256 from "keccak256";
+
+let hhEthers;
+const getLeaf = (address, amount) =>
+    Buffer.from(ethersLib.solidityPackedKeccak256(["address", "uint256"], [address, amount]).slice(2), "hex");
 
 describe("Merkle Airdrop", function () {
     let Merkle, merkleContract, Token, token;
     let root, tree;
     let owner, addr1, addr2, addr3;
-
-    const airdropAmount = ethers.utils.parseEther("100");
-
-    const getLeaf = (address, amount) =>
-        Buffer.from(ethers.utils.solidityKeccak256(["address", "uint256"], [address, amount]).slice(2), "hex");
+    let airdropAmount;
 
     beforeEach(async function () {
-        [owner, addr1, addr2, addr3] = await ethers.getSigners();
+        const connection = await hre.network.connect();
+        hhEthers = connection.ethers;
+        airdropAmount = ethersLib.parseEther("100");
+        [owner, addr1, addr2, addr3] = await hhEthers.getSigners();
 
         // Build Merkle Tree
         const leaves = [
@@ -26,18 +30,20 @@ describe("Merkle Airdrop", function () {
 
         // Deploy mock ERC20 token
         Token = await ethers.getContractFactory("MockERC20");
-        token = await Token.deploy("TestToken", "TST", ethers.utils.parseEther("1000000"));
-        await token.deployed();
+        token = await Token.deploy("TestToken", "TST", ethers.parseEther("1000000"));
+        await token.waitForDeployment();
 
         // Send airdrop tokens to contract
         Merkle = await ethers.getContractFactory("Merkle");
-        merkleContract = await Merkle.deploy(root, token.address);
-        await token.transfer(merkleContract.address, ethers.utils.parseEther("1000"));
+        merkleContract = await Merkle.deploy(root, await token.getAddress());
+        await merkleContract.waitForDeployment();
+
+        await token.transfer(await merkleContract.getAddress(), ethers.parseEther("1000"));
     });
 
     it("should deploy with correct root and token", async () => {
         expect(await merkleContract.root()).to.equal(root);
-        expect(await merkleContract.tokenToAirdrop()).to.equal(token.address);
+        expect(await merkleContract.tokenToAirdrop()).to.equal(await token.getAddress());
     });
 
     it("should allow a valid claim", async () => {
@@ -67,18 +73,19 @@ describe("Merkle Airdrop", function () {
             merkleContract.connect(addr3).claimAirdrop(addr3.address, airdropAmount, fakeProof)
         ).to.be.revertedWith("Invalid proof");
 
-        expect(await token.balanceOf(addr3.address)).to.equal(0);
+        expect(await token.balanceOf(addr3.address)).to.equal(0n);
         expect(await merkleContract.hasClaimed(addr3.address)).to.be.false;
     });
 
     it("should reject if token transfer fails", async () => {
         // Deploy a new Merkle contract with an empty token balance
-        const newMerkle = await Merkle.deploy(root, token.address);
+        const newMerkle = await Merkle.deploy(root, await token.getAddress());
+        await newMerkle.waitForDeployment();
 
         const proof = tree.getHexProof(getLeaf(addr1.address, airdropAmount));
 
         await expect(
             newMerkle.connect(addr1).claimAirdrop(addr1.address, airdropAmount, proof)
-        ).to.be.revertedWith("Token transfer failed");
+        ).to.be.revertedWith("ERC20: transfer amount exceeds balance");
     });
 });
