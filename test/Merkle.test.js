@@ -29,16 +29,16 @@ describe("Merkle Airdrop", function () {
         root = tree.getHexRoot();
 
         // Deploy mock ERC20 token
-        Token = await ethers.getContractFactory("MockERC20");
-        token = await Token.deploy("TestToken", "TST", ethers.parseEther("1000000"));
+        Token = await hhEthers.getContractFactory("MockERC20");
+        token = await Token.deploy("TestToken", "TST", ethersLib.parseEther("1000000"));
         await token.waitForDeployment();
 
         // Send airdrop tokens to contract
-        Merkle = await ethers.getContractFactory("Merkle");
+        Merkle = await hhEthers.getContractFactory("Merkle");
         merkleContract = await Merkle.deploy(root, await token.getAddress());
         await merkleContract.waitForDeployment();
 
-        await token.transfer(await merkleContract.getAddress(), ethers.parseEther("1000"));
+        await token.transfer(await merkleContract.getAddress(), ethersLib.parseEther("1000"));
     });
 
     it("should deploy with correct root and token", async () => {
