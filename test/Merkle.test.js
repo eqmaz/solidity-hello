@@ -86,6 +86,6 @@ describe("Merkle Airdrop", function () {
 
         await expect(
             newMerkle.connect(addr1).claimAirdrop(addr1.address, airdropAmount, proof)
-        ).to.be.revertedWith("ERC20: transfer amount exceeds balance");
+        ).to.be.revertedWithCustomError(token, "ERC20InsufficientBalance");
     });
 });
